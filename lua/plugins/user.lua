@@ -1,85 +1,52 @@
-if true then return {} end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
 -- You can also add or configure plugins by creating files in this `plugins/` folder
 -- Here are some examples:
 
 ---@type LazySpec
 return {
-
-  -- == Examples of Adding Plugins ==
-
-  "andweeb/presence.nvim",
+  -- Precognition
+  -- copied from astrocommunity.Workflow.precognition-nvim and add opts
   {
-    "ray-x/lsp_signature.nvim",
-    event = "BufRead",
-    config = function() require("lsp_signature").setup() end,
+    -- "tris203/precognition.nvim",
+    "osamuaoki/precognition.nvim",
+    event = "User AstroFile",
+    dependencies = {
+      {
+        "AstroNvim/astrocore",
+        opts = function(_, opts)
+          local maps = opts.mappings
+          maps.n["<Leader>uP"] = {
+            function()
+              local precognition = require "precognition"
+              local notify = require("astrocore").notify
+              precognition.toggle()
+              if precognition.visible() then
+                notify "Enabled precognition"
+              else
+                notify "Disabled precognition"
+              end
+            end,
+            desc = "Toggle precognition †",
+          }
+        end,
+      },
+    },
+    opts = {
+      -- override default opts for precognition to start invisible
+      startVisible = false,
+    },
   },
-
-  -- == Examples of Overriding Plugins ==
-
-  -- customize alpha options
+  -- add unicode code point display to statusline
   {
-    "goolord/alpha-nvim",
+    "rebelot/heirline.nvim",
     opts = function(_, opts)
-      -- customize the dashboard header
-      opts.section.header.val = {
-        " █████  ███████ ████████ ██████   ██████",
-        "██   ██ ██         ██    ██   ██ ██    ██",
-        "███████ ███████    ██    ██████  ██    ██",
-        "██   ██      ██    ██    ██   ██ ██    ██",
-        "██   ██ ███████    ██    ██   ██  ██████",
-        " ",
-        "    ███    ██ ██    ██ ██ ███    ███",
-        "    ████   ██ ██    ██ ██ ████  ████",
-        "    ██ ██  ██ ██    ██ ██ ██ ████ ██",
-        "    ██  ██ ██  ██  ██  ██ ██  ██  ██",
-        "    ██   ████   ████   ██ ██      ██",
+      local status = require "astroui.status"
+      -- add unicode codepoint indicator to last statusline indicator
+      opts.statusline[#opts.statusline] = status.component.builder {
+        provider = "[+U%02B]",
+        hl = status.hl.get_attributes "mode", -- highlight based on mode attributes
+        surround = { separator = "right", color = status.hl.mode_bg }, -- background highlight based on mode
       }
-      return opts
     end,
   },
-
-  -- You can disable default plugins as follows:
   { "max397574/better-escape.nvim", enabled = false },
-
-  -- You can also easily customize additional setup of plugins that is outside of the plugin's setup call
-  {
-    "L3MON4D3/LuaSnip",
-    config = function(plugin, opts)
-      require "astronvim.plugins.configs.luasnip"(plugin, opts) -- include the default astronvim config that calls the setup call
-      -- add more custom luasnip configuration such as filetype extend or custom snippets
-      local luasnip = require "luasnip"
-      luasnip.filetype_extend("javascript", { "javascriptreact" })
-    end,
-  },
-
-  {
-    "windwp/nvim-autopairs",
-    config = function(plugin, opts)
-      require "astronvim.plugins.configs.nvim-autopairs"(plugin, opts) -- include the default astronvim config that calls the setup call
-      -- add more custom autopairs configuration such as custom rules
-      local npairs = require "nvim-autopairs"
-      local Rule = require "nvim-autopairs.rule"
-      local cond = require "nvim-autopairs.conds"
-      npairs.add_rules(
-        {
-          Rule("$", "$", { "tex", "latex" })
-            -- don't add a pair if the next character is %
-            :with_pair(cond.not_after_regex "%%")
-            -- don't add a pair if  the previous character is xxx
-            :with_pair(
-              cond.not_before_regex("xxx", 3)
-            )
-            -- don't move right when repeat character
-            :with_move(cond.none())
-            -- don't delete if the next character is xx
-            :with_del(cond.not_after_regex "xx")
-            -- disable adding a newline when you press <cr>
-            :with_cr(cond.none()),
-        },
-        -- disable for .vim files, but it work for another filetypes
-        Rule("a", "a", "-vim")
-      )
-    end,
-  },
 }
